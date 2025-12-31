@@ -1,0 +1,11 @@
+@use "./var.scss" as *;
+
+body {
+  margin: 0;
+}
+
+.main-container {
+  min-height: calc(100vh - $nav-height);
+  width: 100%;
+  background-color: var(--td-bg-color-page);
+}
