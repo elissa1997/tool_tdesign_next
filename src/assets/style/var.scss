@@ -1,1 +1,15 @@
 $nav-height: 56px;
+
+:root {
+  --home-icon: #174bf4;
+  --home-icon-shadow: #8ea8ff;
+  --card-shadow: 0 6px 16px rgba(0, 45, 114, 0.15);
+  --card-shadow-hover: 0 10px 25px rgba(0, 45, 114, 0.1);
+}
+
+:root[theme-mode='dark'] {
+  --home-icon: #00ffff;
+  --home-icon-shadow: rgba(177, 255, 255, 0.7);
+  --card-shadow: 0 6px 16px 1px rgba(170, 253, 255, 0.15);
+  --card-shadow-hover: 0 10px 25px 1px rgba(170, 253, 255, 0.15);
+}

@@ -80,7 +80,7 @@ const sizeStyle = computed(() => {
 
   &.has-shadow {
     :deep(svg) {
-      filter: drop-shadow(0 2px 6px var(--shadow-color));
+      filter: drop-shadow(0 2px 6px var(--home-icon-shadow));
     }
   }
 }
