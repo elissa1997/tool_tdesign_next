@@ -1,5 +1,6 @@
 <script setup>
 import {onMounted, ref} from 'vue'
+import { useRouter } from 'vue-router';
 import {MenuApplicationIcon, ModeDarkIcon, ModeLightIcon} from 'tdesign-icons-vue-next'
 
 const theme = ref('light')
@@ -31,6 +32,14 @@ const navList = [
     label: '存储'
   }
 ]
+const router = useRouter()
+const menuClick = (item) => {
+  if (item.type === 'inner') {
+    router.push(item.value)
+  } else {
+    window.open(item.value)
+  }
+}
 
 const mobileNavOpen = ref(false)
 </script>
@@ -41,7 +50,7 @@ const mobileNavOpen = ref(false)
     <img src="@/assets/img/logo.png" class="logo" />
 
     <div class="navWarp" :class="mobileNavOpen? 'mobileNavOpen':'mobileNavClose'">
-      <div class="navItem" v-for="item in navList" :key="item.value">{{item.label}}</div>
+      <div class="navItem" v-for="item in navList" :key="item.value" @click="menuClick(item)">{{item.label}}</div>
     </div>
 
     <div class="meta">
@@ -125,7 +134,7 @@ const mobileNavOpen = ref(false)
       box-sizing: border-box;
       border-top: solid 1px var(--td-component-border);
       transition: all .3s ease-in-out;
-      z-index: 9;
+      z-index: 2;
       .navItem {
         transition: all .3s ease-in-out;
         color: var(--td-text-color-primary);
@@ -166,6 +175,7 @@ const mobileNavOpen = ref(false)
 
   .meta {
     display: flex;
+    z-index: 3;
 
     .menuIcon {
       color: var(--td-text-color-primary);
