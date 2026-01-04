@@ -30,6 +30,7 @@ export default defineConfig({
       scss: {
         additionalData: `
           @use "@/assets/style/var.scss" as *;
+          @use "@/assets/style/respond.scss" as *;
         `
       }
     }

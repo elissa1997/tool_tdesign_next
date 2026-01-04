@@ -41,7 +41,7 @@ const themeChange = (val) => {
 <style scoped lang="scss">
   .logo {
     width: auto;
-    height: 40px;
+    height: 30px;
     object-fit: cover;
   }
 </style>

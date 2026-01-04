@@ -1,0 +1,35 @@
+@use "sass:map";
+@use "sass:list";
+@use "sass:meta";
+
+$breakPoints: (
+  'phone': (0px, 1059px),
+  'desktop': 1060px,
+  'tv': 1921px
+);
+
+@mixin respond-to($breakName) {
+  $bp: map.get($breakPoints, $breakName);
+
+  @if meta.type-of($bp) == 'list' {
+    $min: list.nth($bp, 1);
+    $max: list.nth($bp, 2);
+
+    @media screen and (min-width: $min) and (max-width: $max) {
+      @content;
+    }
+  } @else {
+    @media screen and (min-width: $bp) {
+      @content;
+    }
+  }
+}
+
+
+@mixin phoneWidth {
+  width: 100%;
+}
+
+@mixin desktopWidth {
+  width: 1040px;
+}
