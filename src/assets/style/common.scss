@@ -9,3 +9,13 @@ body {
   width: 100%;
   background-color: var(--td-bg-color-page);
 }
+
+.tool-title {
+  font-size: var(--td-font-size-title-large);
+  color: var(--td-text-color-primary);
+  height: $title-height;
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  justify-content: center;
+}

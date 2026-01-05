@@ -1,5 +1,5 @@
 $nav-height: 56px;
-
+$title-height: 50px;
 :root {
   --nav-bg: rgba(255, 255, 255, 0.6);
   --nav-item-font-color: #174bf4;
@@ -8,6 +8,7 @@ $nav-height: 56px;
   --home-icon-shadow: #8ea8ff;
   --card-shadow: 0 6px 16px rgba(0, 45, 114, 0.15);
   --card-shadow-hover: 0 10px 25px rgba(0, 45, 114, 0.1);
+  --main-glass-bg: rgba(238, 238, 238, 0.7)
 }
 
 :root[theme-mode='dark'] {
@@ -18,4 +19,5 @@ $nav-height: 56px;
   --home-icon-shadow: rgba(177, 255, 255, 0.7);
   --card-shadow: 0 6px 16px 1px rgba(170, 253, 255, 0.15);
   --card-shadow-hover: 0 10px 25px 1px rgba(170, 253, 255, 0.15);
+  --main-glass-bg: rgba(24, 24, 24, 0.7)
 }
