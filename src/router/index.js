@@ -14,6 +14,11 @@ const routes = [
     path: '/satellite',
     name: 'satellite',
     component: () => import('@/views/satellite.vue')
+  },
+  {
+    path: '/coord',
+    name: 'coord',
+    component: () => import('@/views/coord.vue')
   }
 ]
 

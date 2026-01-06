@@ -1,5 +1,7 @@
 <script setup>
 import svgIcon from '@/components/SvgIcon.vue'
+import { useRouter } from 'vue-router';
+
 const toolList = [
   {
     name: 'satellite',
@@ -38,6 +40,12 @@ const toolList = [
   },
 ]
 
+const router = useRouter();
+const gotoTool = (item) => {
+  router.push({
+    name: item.name
+  })
+}
 </script>
 
 <template>
@@ -46,7 +54,7 @@ const toolList = [
     <t-row :gutter="[20, 24]">
       <t-col :xs="12" :sm="6" :md="6" :lg="4" :xl="4"  v-for="item in toolList" :key="item.name">
 
-        <div class="card">
+        <div class="card" @click="gotoTool(item)">
           <div class="header">
             <svgIcon class="icon" :name="item.icon" :shadow="true"/>
             <div class="name">{{ item.title }}</div>

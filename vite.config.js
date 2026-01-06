@@ -37,6 +37,7 @@ export default defineConfig(({ mode }) => {
           additionalData: `
           @use "@/assets/style/var.scss" as *;
           @use "@/assets/style/respond.scss" as *;
+          @use "@/assets/style/mixin.scss" as *;
         `
         }
       }

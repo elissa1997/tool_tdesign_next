@@ -116,26 +116,9 @@ const changeType = () => {
 
 <style scoped lang="scss">
 .contaner {
-  height: calc(100vh - $nav-height);
-  overflow-y: auto;
-  box-sizing: border-box;
-
-  @include respond-to('phone') {
-    padding: var(--td-size-4);
-  }
-
-  @include respond-to('desktop') {
-    padding: var(--td-size-12);
-  }
+  @include container;
   .satellite {
-    background-color: var(--main-glass-bg);
-    width: 100%;
-    height: 100%;
-    backdrop-filter: blur(10px);
-    border-radius: var(--td-radius-medium);
-    padding: var(--td-size-4);
-    box-sizing: border-box;
-    border: 1px solid var(--td-brand-color-2);
+    @include container-inner;
 
     .mapWarp {
       border-radius: var(--td-radius-medium);
