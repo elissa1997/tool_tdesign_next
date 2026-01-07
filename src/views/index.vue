@@ -29,7 +29,7 @@ const toolList = [
     title: '剪贴板',
     icon: 'clipboard',
     public: true,
-    describe: '在线可加密网络剪贴板，跨平台、跨设备复制粘贴'
+    describe: '在线网络剪贴板，跨平台、跨设备复制粘贴'
   },
   {
     name: 'waterline',
@@ -37,7 +37,7 @@ const toolList = [
     icon: 'waterline',
     public: false,
     describe: '仅内部使用，水路拓扑图速查'
-  },
+  }
 ]
 
 const router = useRouter();
@@ -82,7 +82,8 @@ const gotoTool = (item) => {
     @include respond-to('desktop') {
       padding: var(--td-size-12) calc((100% - 1040px) / 2);
     }
-
+    height: calc(100vh - $nav-height);
+    overflow-y: auto;
     box-sizing: border-box;
     .card {
       width: 100%;
@@ -118,9 +119,9 @@ const gotoTool = (item) => {
           overflow: hidden;
           text-overflow: ellipsis;
           display: -webkit-box;
-          -webkit-line-clamp: 2; /* 限制为3行 */
+          -webkit-line-clamp: 3; /* 限制为3行 */
           -webkit-box-orient: vertical;
-
+          white-space: pre-wrap;
           font-size: var(--td-font-size-link-small);
           color: var(--td-text-color-secondary);
         }
