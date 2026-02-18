@@ -24,6 +24,11 @@ const routes = [
     path: '/clipboard',
     name: 'clipboard',
     component: () => import('@/views/clipboard.vue')
+  },
+  {
+    path: '/monitor',
+    name: 'monitor',
+    component: () => import('@/views/monitor.vue')
   }
 ]
 
