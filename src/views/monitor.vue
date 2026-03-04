@@ -46,6 +46,10 @@ const dockerCol = [
 
 // ====== 全局 resize：requestAnimationFrame 合帧 ======
 let rafId = 0;
+let themeObserver = null;
+
+const getEchartsTheme = () =>
+  document.documentElement.getAttribute("theme-mode") === "dark" ? "dark" : null;
 
 const resizeAllCharts = () => {
   // 统一在下一帧 resize，避免一秒触发几十次
@@ -80,6 +84,16 @@ onMounted(async () => {
 
   // 全局监听
   window.addEventListener("resize", onWindowResize, { passive: true });
+  themeObserver = new MutationObserver((mutations) => {
+    if (mutations.some((m) => m.attributeName === "theme-mode")) {
+      renderChart();
+      resizeAllCharts();
+    }
+  });
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["theme-mode"],
+  });
 });
 
 const getMonitorData = async () => {
@@ -121,12 +135,13 @@ const renderChart = () => {
   echartsInstance.network_2?.dispose();
   echartsInstance.network_3?.dispose();
 
-  echartsInstance.host_cpu = echarts.init(refChartCpu.value);
-  echartsInstance.host_mem = echarts.init(refChartMem.value);
-  echartsInstance.host_disk = echarts.init(refChartDisk.value);
-  echartsInstance.network_1 = echarts.init(refChartNetwork1.value);
-  echartsInstance.network_2 = echarts.init(refChartNetwork2.value);
-  echartsInstance.network_3 = echarts.init(refChartNetwork3.value);
+  const theme = getEchartsTheme();
+  echartsInstance.host_cpu = echarts.init(refChartCpu.value, theme);
+  echartsInstance.host_mem = echarts.init(refChartMem.value, theme);
+  echartsInstance.host_disk = echarts.init(refChartDisk.value, theme);
+  echartsInstance.network_1 = echarts.init(refChartNetwork1.value, theme);
+  echartsInstance.network_2 = echarts.init(refChartNetwork2.value, theme);
+  echartsInstance.network_3 = echarts.init(refChartNetwork3.value, theme);
 
   echartsInstance.host_cpu.setOption(
       gaugeChartOption("CPU使用率", latestData.value.cpu.usage_pct)
@@ -154,6 +169,8 @@ const renderChart = () => {
 onBeforeUnmount(() => {
   window.removeEventListener("resize", onWindowResize);
   cancelAnimationFrame(rafId);
+  themeObserver?.disconnect();
+  themeObserver = null;
 
   Object.values(echartsInstance).forEach((chart) => chart?.dispose());
 });

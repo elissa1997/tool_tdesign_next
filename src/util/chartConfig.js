@@ -2,6 +2,7 @@ import * as echarts from "echarts";
 
 export function gaugeChartOption(name, value) {
   return {
+    backgroundColor:'',
     series: [
       {
         name: name,
@@ -68,9 +69,9 @@ export function gaugeChartOption(name, value) {
           icon: 'path://M-1,-6 L1,-6 L1,-70 L-1,-70 Z',
           width: 2,          // 影响 icon 的缩放参考
           length: '60%',     // 仍保留（部分版本会参考 length/width）
-          itemStyle: {
-            color: '#111'
-          }
+          // itemStyle: {
+          //   color: '#111'
+          // }
         },
 
         data: [{ value: value }],
@@ -90,6 +91,7 @@ export function gaugeChartOption(name, value) {
 
 export function lineChartOption(name, lastcheck, avgdelay, losspk) {
   return {
+    backgroundColor:'',
     title: { text: name },
     tooltip: {
       trigger: 'axis',
