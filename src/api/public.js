@@ -6,3 +6,11 @@ export function staticFile(path) {
     method: 'get',
   })
 }
+
+export function smartPingApi(params) {
+  return instance_api({
+    url: import.meta.env.VITE_APP_SMARTPING_API + '/api/ping.json',
+    method: 'get',
+    params,
+  })
+}

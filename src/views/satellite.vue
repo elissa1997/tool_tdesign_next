@@ -124,11 +124,11 @@ const changeType = () => {
       border-radius: var(--td-radius-medium);
       width: 100%;
       @include respond-to('phone') {
-        height: calc(100% - 128px - $title-height);
+        height: calc(100% - 129px - $title-height);
       }
 
       @include respond-to('desktop') {
-        height: calc(100% - 68px - $title-height);
+        height: calc(100% - 69px - $title-height);
       }
     }
 
