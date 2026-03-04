@@ -399,7 +399,7 @@ onBeforeUnmount(() => {
     .systemctl {
       .tableWarp {
         width: 100%;
-        height: 180px;
+        height: calc(180px - 2px);
         border-radius: var(--td-radius-medium);
         border: 1px solid var(--td-component-border);
         :deep(.t-table) {
@@ -414,14 +414,14 @@ onBeforeUnmount(() => {
     .docker {
       .tableWarp {
         width: 100%;
-        height: calc(100vh - $nav-height - var(--td-size-12)*2 - 2px - $title-height - var(--td-pop-padding-m)*2 - 30px - 180px - 8px - var(--td-pop-padding-m)*2 - 30px - 4px - 16px);
+        //height: calc(100vh - $nav-height - var(--td-size-12)*2 - 2px - $title-height - var(--td-pop-padding-m)*2 - 30px - 180px - 8px - var(--td-pop-padding-m)*2 - 30px - 8px - 16px);
 
         @include respond-to('phone') {
           height: 300px;
         }
 
         @include respond-to('desktop') {
-          height: calc(100vh - $nav-height - var(--td-size-12)*2 - 2px - $title-height - var(--td-pop-padding-m)*2 - 30px - 180px - 8px - var(--td-pop-padding-m)*2 - 30px - 4px - 16px);
+          height: calc(100vh - $nav-height - var(--td-size-12)*2 - 2px - $title-height - var(--td-pop-padding-m)*2 - 30px - 180px - 8px - var(--td-pop-padding-m)*2 - 30px - 2px - 16px);
         }
 
         border-radius: var(--td-radius-medium);
@@ -443,7 +443,7 @@ onBeforeUnmount(() => {
         }
 
         @include respond-to('desktop') {
-          height: calc(100vh - $nav-height - var(--td-size-12)*2 - 2px - $title-height - var(--td-pop-padding-m)*2 - 30px - 180px - 8px - var(--td-pop-padding-m)*2 - 30px - 4px - 16px);
+          height: calc(100vh - $nav-height - var(--td-size-12)*2 - 2px - $title-height - var(--td-pop-padding-m)*2 - 30px - 180px - 8px - var(--td-pop-padding-m)*2 - 30px - 0px - 16px);
         }
 
         display: flex;
