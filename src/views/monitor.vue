@@ -4,17 +4,30 @@ import dayjs from "dayjs";
 import { staticFile, smartPingApi } from "@/api/public.js";
 import * as echarts from "echarts";
 import { gaugeChartOption, lineChartOption } from "@/util/chartConfig.js";
+import {RefreshIcon, TimeIcon} from "tdesign-icons-vue-next";
 import SvgIcon from "@/components/SvgIcon.vue";
 
 let latestData = ref(null);
-let historyData = ref(null);
+const systemctlCol = [
+  { title: "服务名称", colKey: "name", width: "30%",align: "center" },
+  { title: "活动状态", colKey: "active", width: "30%", align: "center" },
+  { title: "服务状态", colKey: "sub", width: "30%", align: "center" }
+]
+
+const dockerCol = [
+  { title: "容器名称", colKey: "name", align: "center" },
+  { title: "运行状态", colKey: "status", align: "center" },
+  { title: "CPU(%)", colKey: "cpu_pct", width: "20%", align: "center" },
+  { title: "内存(%)", colKey: "mem_usage", width: "20%", align: "center" },
+]
 
 let smartPingData = ref([
-  { name: 'GitHub Asia', addr: "20.205.243.166", data: null },
-  { name: 'CN2 Chicago', addr: "66.102.247.84", data: null },
-  { name: 'IBM Quad9', addr: "9.9.9.9", data: null },
+  { name: "GitHub Asia", addr: "20.205.243.166", data: null },
+  { name: "CN2 Chicago", addr: "66.102.247.84", data: null },
+  { name: "IBM Quad9", addr: "9.9.9.9", data: null },
 ]);
 
+// 统一管理实例（key 与 domRef 一一对应）
 let echartsInstance = {
   host_cpu: null,
   host_mem: null,
@@ -31,71 +44,30 @@ const refChartNetwork1 = ref(null);
 const refChartNetwork2 = ref(null);
 const refChartNetwork3 = ref(null);
 
-const systemctlCol = [
-  { title: "服务名称", colKey: "name", width: "20%", },
-  { title: "活动状态", colKey: "active", width: "20%", },
-  { title: "服务状态", colKey: "sub", width: "20%", }
-]
-
-const dockerCol = [
-  { title: "容器名称", colKey: "name", align: "center" },
-  { title: "运行状态", colKey: "status", align: "center" },
-  { title: "CPU", colKey: "cpu_pct", width: "20%", align: "center" },
-  { title: "内存", colKey: "mem_usage", width: "20%", align: "center" },
-]
-
 // ====== 全局 resize：requestAnimationFrame 合帧 ======
 let rafId = 0;
 let themeObserver = null;
 
 const getEchartsTheme = () =>
-  document.documentElement.getAttribute("theme-mode") === "dark" ? "dark" : null;
+    document.documentElement.getAttribute("theme-mode") === "dark" ? "dark" : null;
 
 const resizeAllCharts = () => {
-  // 统一在下一帧 resize，避免一秒触发几十次
   cancelAnimationFrame(rafId);
   rafId = requestAnimationFrame(() => {
     Object.values(echartsInstance).forEach((chart) => {
       if (!chart) return;
-
-      // 可选：容器为 0 时跳过（如被 v-if/v-show 隐藏）
       const dom = chart.getDom?.();
       if (!dom) return;
       const { width, height } = dom.getBoundingClientRect();
       if (width <= 0 || height <= 0) return;
-
       chart.resize();
     });
   });
 };
 
-const onWindowResize = () => {
-  resizeAllCharts();
-};
+const onWindowResize = () => resizeAllCharts();
 
-onMounted(async () => {
-  await getMonitorData();
-  await getSmartPingData();
-  await nextTick(); // 确保 DOM/布局已完成
-  renderChart();
-
-  // 初次手动触发一次，避免首屏尺寸还没算准
-  resizeAllCharts();
-
-  // 全局监听
-  window.addEventListener("resize", onWindowResize, { passive: true });
-  themeObserver = new MutationObserver((mutations) => {
-    if (mutations.some((m) => m.attributeName === "theme-mode")) {
-      renderChart();
-      resizeAllCharts();
-    }
-  });
-  themeObserver.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ["theme-mode"],
-  });
-});
-
+// ====== 数据请求 ======
 const getMonitorData = async () => {
   let statueString = "";
   let today = dayjs().format("YYYY-MM-DD");
@@ -107,73 +79,127 @@ const getMonitorData = async () => {
   const lines = statueString.trim().split("\n");
   const data = lines.map((line) => JSON.parse(line));
   latestData.value = data[data.length - 1];
-  let systemdObj = latestData.value.systemd
-  latestData.value.systemd = []
-  for (const systemdObjKey in systemdObj) {
-    latestData.value.systemd.push({name: systemdObjKey, ...systemdObj[systemdObjKey]})
+
+  // systemd map -> array
+  const systemdObj = latestData.value.systemd;
+  latestData.value.systemd = [];
+  for (const key in systemdObj) {
+    latestData.value.systemd.push({ name: key, ...systemdObj[key] });
   }
 };
 
 const getSmartPingData = async () => {
-  let axiosArr = [];
-  smartPingData.value.forEach((item) => {
-    axiosArr.push(smartPingApi({ip: item.addr}))
-  });
-  await Promise.all(axiosArr).then((res) => {
-    smartPingData.value.forEach((item, index) => {
-      item.data = res[index]
-    })
+  const reqs = smartPingData.value.map((item) => smartPingApi({ ip: item.addr }));
+  const res = await Promise.all(reqs);
+  smartPingData.value.forEach((item, index) => {
+    item.data = res[index];
   });
 };
 
-const renderChart = () => {
-  // 如果重复进入/切换路由回来，避免重复 init
-  echartsInstance.host_cpu?.dispose();
-  echartsInstance.host_mem?.dispose();
-  echartsInstance.host_disk?.dispose();
-  echartsInstance.network_1?.dispose();
-  echartsInstance.network_2?.dispose();
-  echartsInstance.network_3?.dispose();
+// ====== 图表工具函数（抽象重复） ======
+const chartRefsMap = () => ({
+  host_cpu: refChartCpu,
+  host_mem: refChartMem,
+  host_disk: refChartDisk,
+  network_1: refChartNetwork1,
+  network_2: refChartNetwork2,
+  network_3: refChartNetwork3,
+});
 
+const disposeCharts = (keys) => {
+  const list = keys?.length ? keys : Object.keys(echartsInstance);
+  list.forEach((k) => {
+    echartsInstance[k]?.dispose();
+    echartsInstance[k] = null;
+  });
+};
+
+const initChart = (key, domRef) => {
+  if (!domRef?.value) return null;
   const theme = getEchartsTheme();
-  echartsInstance.host_cpu = echarts.init(refChartCpu.value, theme);
-  echartsInstance.host_mem = echarts.init(refChartMem.value, theme);
-  echartsInstance.host_disk = echarts.init(refChartDisk.value, theme);
-  echartsInstance.network_1 = echarts.init(refChartNetwork1.value, theme);
-  echartsInstance.network_2 = echarts.init(refChartNetwork2.value, theme);
-  echartsInstance.network_3 = echarts.init(refChartNetwork3.value, theme);
-
-  echartsInstance.host_cpu.setOption(
-      gaugeChartOption("CPU使用率", latestData.value.cpu.usage_pct)
-  );
-  echartsInstance.host_mem.setOption(
-      gaugeChartOption("内存使用率", latestData.value.mem.usage_pct)
-  );
-  echartsInstance.host_disk.setOption(
-      gaugeChartOption("磁盘使用率", latestData.value.disk.usage_pct)
-  );
-  echartsInstance.network_1.setOption(
-      lineChartOption(smartPingData.value[0].name, smartPingData.value[0].data.lastcheck, smartPingData.value[0].data.avgdelay, smartPingData.value[0].data.losspk)
-  );
-  echartsInstance.network_2.setOption(
-      lineChartOption(smartPingData.value[1].name, smartPingData.value[1].data.lastcheck, smartPingData.value[1].data.avgdelay, smartPingData.value[1].data.losspk)
-  );
-  echartsInstance.network_3.setOption(
-      lineChartOption(smartPingData.value[2].name, smartPingData.value[2].data.lastcheck, smartPingData.value[2].data.avgdelay, smartPingData.value[2].data.losspk)
-  );
+  const ins = echarts.init(domRef.value, theme);
+  echartsInstance[key] = ins;
+  return ins;
 };
 
+const setGauge = (chart, title, value) => {
+  if (!chart) return;
+  chart.setOption(gaugeChartOption(title, value));
+};
 
+const setLine = (chart, title, lastcheck, avgdelay, losspk) => {
+  if (!chart) return;
+  chart.setOption(lineChartOption(title, lastcheck, avgdelay, losspk));
+};
 
+// ====== renderChart：只负责「根据当前数据渲染」 ======
+const renderChart = () => {
+  if (!latestData.value) return;
+
+  // 主题变化或刷新时，直接全量重建（简单稳定）
+  disposeCharts();
+
+  const refs = chartRefsMap();
+
+  // init
+  const cpu = initChart("host_cpu", refs.host_cpu);
+  const mem = initChart("host_mem", refs.host_mem);
+  const disk = initChart("host_disk", refs.host_disk);
+  const n1 = initChart("network_1", refs.network_1);
+  const n2 = initChart("network_2", refs.network_2);
+  const n3 = initChart("network_3", refs.network_3);
+
+  // setOption
+  setGauge(cpu, "CPU使用率", latestData.value.cpu.usage_pct);
+  setGauge(mem, "内存使用率", latestData.value.mem.usage_pct);
+  setGauge(disk, "磁盘使用率", latestData.value.disk.usage_pct);
+
+  const d1 = smartPingData.value?.[0]?.data;
+  const d2 = smartPingData.value?.[1]?.data;
+  const d3 = smartPingData.value?.[2]?.data;
+
+  if (d1) setLine(n1, smartPingData.value[0].name, d1.lastcheck, d1.avgdelay, d1.losspk);
+  if (d2) setLine(n2, smartPingData.value[1].name, d2.lastcheck, d2.avgdelay, d2.losspk);
+  if (d3) setLine(n3, smartPingData.value[2].name, d3.lastcheck, d3.avgdelay, d3.losspk);
+};
+
+// ====== 1) 初始化/刷新统一入口 ======
+const initOrRefresh = async () => {
+  await getMonitorData();
+  await getSmartPingData();
+  await nextTick();
+  renderChart();
+  resizeAllCharts();
+};
+
+// mount：调用一次 initOrRefresh + 绑定监听
+onMounted(async () => {
+  await initOrRefresh();
+
+  window.addEventListener("resize", onWindowResize, { passive: true });
+
+  themeObserver = new MutationObserver((mutations) => {
+    if (mutations.some((m) => m.attributeName === "theme-mode")) {
+      // 主题变化：重渲染 + resize
+      renderChart();
+      resizeAllCharts();
+    }
+  });
+
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["theme-mode"],
+  });
+});
 
 onBeforeUnmount(() => {
   window.removeEventListener("resize", onWindowResize);
   cancelAnimationFrame(rafId);
   themeObserver?.disconnect();
   themeObserver = null;
-
-  Object.values(echartsInstance).forEach((chart) => chart?.dispose());
+  disposeCharts();
 });
+
 </script>
 
 <template>
@@ -232,7 +258,8 @@ onBeforeUnmount(() => {
         <t-col :xs="12" :sm="12" :md="6" :lg="8" :xl="8">
           <div class="card systemctl">
             <div class="cardTitle">系统服务</div>
-            <div class="tableWarp">
+            <t-loading v-if="!latestData"/>
+            <div class="tableWarp" v-else>
               <t-base-table row-key="name" :data="latestData.systemd" :columns="systemctlCol" height="100%" size="small">
                 <template #active="{ col, row }">
                   <t-tag :theme="row.active === 'active'? 'success' : 'danger'">{{row.active}}</t-tag>
@@ -249,14 +276,20 @@ onBeforeUnmount(() => {
         <t-col :xs="12" :sm="12" :md="6" :lg="7" :xl="7">
           <div class="card docker">
             <div class="cardTitle">Docker容器</div>
-            <div class="tableWarp">
-              <t-base-table row-key="name" :data="latestData.docker.containers" :columns="dockerCol" size="small">
+            <t-loading v-if="!latestData"/>
+            <div class="tableWarp" v-else>
+              <t-base-table row-key="name" :data="latestData.docker.containers" :columns="dockerCol" height="100%" size="small">
+                <template #status="{ col, row }">
+<!--                  {{row.status.includes('Up')? '运行中' : '已停止'}}-->
+                  <t-tag :theme="row.status.includes('Up')? 'success' : 'danger'">{{row.status}}</t-tag>
+                </template>
+
                 <template #cpu_pct="{ col, row }">
                   {{row.cpu_pct.trim().replace('%', '')}}
                 </template>
 
                 <template #mem_usage="{ col, row }">
-                  {{(row.mem_usage.split('/')[0].trim().replace('MiB', '') / 1907.349).toFixed(2)}}
+                  {{(parseFloat(row.mem_usage.split('/')[0].trim().replace('MiB', '')) / parseFloat(row.mem_usage.split('/')[1].trim().replace('MiB', ''))).toFixed(2)}}
                 </template>
               </t-base-table>
             </div>
@@ -279,6 +312,15 @@ onBeforeUnmount(() => {
 
     </div>
   </div>
+
+  <div class="operat">
+    <div class="item" @click="initOrRefresh">
+      <refresh-icon/>
+      <div class="text">刷新</div>
+    </div>
+  </div>
+
+
 </template>
 
 <style scoped lang="scss">
@@ -298,6 +340,8 @@ onBeforeUnmount(() => {
         font-size: var(--td-font-size-body-large);
         font-weight: bold;
         color: var(--td-text-color-primary);
+        padding-bottom: var(--td-comp-paddingTB-s);
+
       }
     }
 
@@ -356,13 +400,38 @@ onBeforeUnmount(() => {
       .tableWarp {
         width: 100%;
         height: 180px;
+        border-radius: var(--td-radius-medium);
+        border: 1px solid var(--td-component-border);
+        :deep(.t-table) {
+          border-radius: var(--td-radius-medium);
+          .t-table__content {
+            border-radius: var(--td-radius-medium);
+          }
+        }
       }
     }
 
     .docker {
       .tableWarp {
         width: 100%;
-        height: calc(100vh - $nav-height - var(--td-size-12)*2 - 2px - $title-height - var(--td-pop-padding-m)*2 - 22px - 180px - 8px - var(--td-pop-padding-m)*2 - 22px - 16px);
+        height: calc(100vh - $nav-height - var(--td-size-12)*2 - 2px - $title-height - var(--td-pop-padding-m)*2 - 30px - 180px - 8px - var(--td-pop-padding-m)*2 - 30px - 4px - 16px);
+
+        @include respond-to('phone') {
+          height: 300px;
+        }
+
+        @include respond-to('desktop') {
+          height: calc(100vh - $nav-height - var(--td-size-12)*2 - 2px - $title-height - var(--td-pop-padding-m)*2 - 30px - 180px - 8px - var(--td-pop-padding-m)*2 - 30px - 4px - 16px);
+        }
+
+        border-radius: var(--td-radius-medium);
+        border: 1px solid var(--td-component-border);
+        :deep(.t-table) {
+          border-radius: var(--td-radius-medium);
+          .t-table__content {
+            border-radius: var(--td-radius-medium);
+          }
+        }
       }
     }
 
@@ -374,7 +443,7 @@ onBeforeUnmount(() => {
         }
 
         @include respond-to('desktop') {
-          height: calc(100vh - $nav-height - var(--td-size-12)*2 - 2px - $title-height - var(--td-pop-padding-m)*2 - 22px - 180px - 8px - var(--td-pop-padding-m)*2 - 22px - 16px);
+          height: calc(100vh - $nav-height - var(--td-size-12)*2 - 2px - $title-height - var(--td-pop-padding-m)*2 - 30px - 180px - 8px - var(--td-pop-padding-m)*2 - 30px - 4px - 16px);
         }
 
         display: flex;
@@ -386,6 +455,45 @@ onBeforeUnmount(() => {
           width: 100%;
         }
       }
+    }
+  }
+}
+
+.operat {
+  position: absolute;
+  right: var(--td-size-12);
+  bottom: var(--td-size-12);
+  display: flex;
+  padding: var(--td-pop-padding-m);
+  box-sizing: border-box;
+  background-color: var(--td-bg-color-container);
+  border-radius: var(--td-radius-default);
+  box-shadow: var(--td-shadow-2);
+  .item {
+    padding: var(--td-pop-padding-s);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    width: 60px;
+    height: 60px;
+    border-radius: var(--td-radius-default);
+    color: var(--td-text-color-primary);
+    transition: all 0.3s;
+    &:hover {
+      background-color: var(--td-bg-color-container-hover);
+      color: var(--home-icon);
+      .text {
+        color: var(--home-icon);
+      }
+    }
+    .text{
+      font-size: var(--td-font-size-body-small);
+      margin-top: var(--td-comp-margin-xs);
+      color: var(--td-text-color-secondary);
+      transition: all 0.3s;
     }
   }
 }
