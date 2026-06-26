@@ -8,6 +8,7 @@ $title-height: 50px;
   --home-icon-shadow: #8ea8ff;
   --card-shadow: 0 6px 16px rgba(0, 45, 114, 0.15);
   --card-shadow-hover: 0 10px 25px rgba(0, 45, 114, 0.1);
+  --card-glass-bg: rgba(204, 222, 255, 0.4);
   --main-glass-bg: rgba(238, 238, 238, 0.4);
 }
 
@@ -19,5 +20,6 @@ $title-height: 50px;
   --home-icon-shadow: rgba(177, 255, 255, 0.7);
   --card-shadow: 0 6px 16px 1px rgba(170, 253, 255, 0.15);
   --card-shadow-hover: 0 10px 25px 1px rgba(170, 253, 255, 0.15);
+  --card-glass-bg: rgba(10, 21, 50, 0.7);
   --main-glass-bg: rgba(24, 24, 24, 0.4);
 }

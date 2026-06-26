@@ -334,8 +334,8 @@ onBeforeUnmount(() => {
       padding: var(--td-pop-padding-m);
       box-sizing: border-box;
       border-radius: var(--td-radius-medium);
-      background-color: var(--td-bg-color-container);
-
+      background-color: var(--card-glass-bg);
+      border: 1px solid var(--td-brand-color-3);
       .cardTitle {
         font-size: var(--td-font-size-body-large);
         font-weight: bold;
@@ -421,7 +421,7 @@ onBeforeUnmount(() => {
         }
 
         @include respond-to('desktop') {
-          height: calc(100vh - $nav-height - var(--td-size-12)*2 - 2px - $title-height - var(--td-pop-padding-m)*2 - 30px - 180px - 8px - var(--td-pop-padding-m)*2 - 30px - 2px - 16px);
+          height: calc(100vh - $nav-height - var(--td-size-12)*2 - 2px - $title-height - var(--td-pop-padding-m)*2 - 30px - 180px - 8px - var(--td-pop-padding-m)*2 - 30px - 2px - 16px - 4px);
         }
 
         border-radius: var(--td-radius-medium);
@@ -443,7 +443,7 @@ onBeforeUnmount(() => {
         }
 
         @include respond-to('desktop') {
-          height: calc(100vh - $nav-height - var(--td-size-12)*2 - 2px - $title-height - var(--td-pop-padding-m)*2 - 30px - 180px - 8px - var(--td-pop-padding-m)*2 - 30px - 0px - 16px);
+          height: calc(100vh - $nav-height - var(--td-size-12)*2 - 2px - $title-height - var(--td-pop-padding-m)*2 - 30px - 180px - 8px - var(--td-pop-padding-m)*2 - 30px - 0px - 16px - 4px);
         }
 
         display: flex;
