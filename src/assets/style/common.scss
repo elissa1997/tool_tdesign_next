@@ -10,6 +10,32 @@ body {
   background-color: var(--td-bg-color-page);
 }
 
+/* WebKit enhanced styling (Chrome, Safari, Edge) */
+/* Note: Standard properties take precedence when both are set */
+@supports selector(::-webkit-scrollbar) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f1f1f100;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #b8b8b8;
+    border-radius: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #b8b8b8;
+  }
+
+  ::-webkit-scrollbar-track:hover {
+    background: #e0e0e000;
+  }
+}
+
 .tool-title {
   font-size: var(--td-font-size-title-large);
   color: var(--td-text-color-primary);

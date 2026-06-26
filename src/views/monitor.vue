@@ -6,20 +6,10 @@ import * as echarts from "echarts";
 import { gaugeChartOption, lineChartOption } from "@/util/chartConfig.js";
 import {RefreshIcon, TimeIcon} from "tdesign-icons-vue-next";
 import SvgIcon from "@/components/SvgIcon.vue";
+import TagDot from "@/components/tagDot.vue";
+import {getAssetsImg} from "@/util/tool.js";
 
 let latestData = ref(null);
-const systemctlCol = [
-  { title: "服务名称", colKey: "name", width: "30%",align: "center" },
-  { title: "活动状态", colKey: "active", width: "30%", align: "center" },
-  { title: "服务状态", colKey: "sub", width: "30%", align: "center" }
-]
-
-const dockerCol = [
-  { title: "容器名称", colKey: "name", align: "center" },
-  { title: "运行状态", colKey: "status", align: "center" },
-  { title: "CPU(%)", colKey: "cpu_pct", width: "20%", align: "center" },
-  { title: "内存(%)", colKey: "mem_usage", width: "20%", align: "center" },
-]
 
 let smartPingData = ref([
   { name: "GitHub Asia", addr: "20.205.243.166", data: null },
@@ -94,6 +84,15 @@ const getSmartPingData = async () => {
   smartPingData.value.forEach((item, index) => {
     item.data = res[index];
   });
+};
+
+const comDockerUsage = (item) => {
+  let mem = parseFloat(item.mem_usage.split('/')[0].trim().replace('MiB', '')) / parseFloat(item.mem_usage.split('/')[1].trim().replace('MiB', ''))
+  let cpu = parseFloat(item.cpu_pct.trim().replace('%', ''))
+  return {
+    mem: Math.round(mem * 100) / 100,
+    cpu: Math.round(cpu * 100) / 100
+  };
 };
 
 // ====== 图表工具函数（抽象重复） ======
@@ -259,15 +258,24 @@ onBeforeUnmount(() => {
           <div class="card systemctl">
             <div class="cardTitle">系统服务</div>
             <t-loading v-if="!latestData"/>
-            <div class="tableWarp" v-else>
-              <t-base-table row-key="name" :data="latestData.systemd" :columns="systemctlCol" height="100%" size="small">
-                <template #active="{ col, row }">
-                  <t-tag :theme="row.active === 'active'? 'success' : 'danger'">{{row.active}}</t-tag>
-                </template>
-                <template #sub="{ col, row }">
-                  <t-tag :theme="row.sub === 'running'? 'success' : 'danger'">{{row.sub}}</t-tag>
-                </template>
-              </t-base-table>
+            <div class="listWarp" v-else>
+
+              <div class="item" v-for="(item, index) in latestData.systemd" :key="item.name">
+                <div class="title">
+                  <svgIcon class="icon" name="powershell" :shadow="true"/>
+                  <span class="text">{{item.name}}</span>
+                </div>
+
+                <div class="infoItem">
+                  <tagDot :theme="item.active === 'active'? 'success' : 'danger'"/>
+                  <span>{{item.active}}</span>
+                </div>
+
+                <div class="infoItem">
+                  <tagDot :theme="item.sub === 'running'? 'success' : 'danger'"/>
+                  <span>{{item.sub}}</span>
+                </div>
+              </div>
             </div>
           </div>
         </t-col>
@@ -277,21 +285,49 @@ onBeforeUnmount(() => {
           <div class="card docker">
             <div class="cardTitle">Docker容器</div>
             <t-loading v-if="!latestData"/>
-            <div class="tableWarp" v-else>
-              <t-base-table row-key="name" :data="latestData.docker.containers" :columns="dockerCol" height="100%" size="small">
-                <template #status="{ col, row }">
-<!--                  {{row.status.includes('Up')? '运行中' : '已停止'}}-->
-                  <t-tag :theme="row.status.includes('Up')? 'success' : 'danger'">{{row.status}}</t-tag>
-                </template>
+            <div class="listWarp">
 
-                <template #cpu_pct="{ col, row }">
-                  {{row.cpu_pct.trim().replace('%', '')}}
-                </template>
+              <div class="item" v-for="(item, index) in latestData.docker.containers" :key="item.id">
+                <div class="baseInfo">
+                  <img class="dockerIcon" :src="getAssetsImg('monitor_docker_icon.png')"/>
+                  <div class="right">
+                    <div class="name">{{item.name}}</div>
+                    <div class="info">
+                      <div class="infoItem">
+                        <tagDot :theme="item.status.includes('Up')? 'success' : 'danger'"/>
+                        <span>{{item.status.includes('Up')? '运行中' : '已停止'}}</span>
+                      </div>
 
-                <template #mem_usage="{ col, row }">
-                  {{(parseFloat(row.mem_usage.split('/')[0].trim().replace('MiB', '')) / parseFloat(row.mem_usage.split('/')[1].trim().replace('MiB', ''))).toFixed(2)}}
-                </template>
-              </t-base-table>
+                      <div class="infoItem">
+                        <t-tag :theme="item.status.includes('Up')? 'success' : 'danger'" size="small">{{item.status}}</t-tag>
+                      </div>
+
+                      <div class="infoItem">
+                        <svgIcon class="icon" name="id" :shadow="true"/>
+                        <span>{{item.id}}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="usage">
+                  <div class="usageItem">
+                    <div class="text">
+                      <span>内存</span>
+                      <span>{{comDockerUsage(item).mem}} %</span>
+                    </div>
+                    <t-progress theme="line" :color="{ from: '#0052D9', to: '#00A870' }" :percentage="comDockerUsage(item).mem" :status="'active'" :label="false"/>
+                  </div>
+                  <div class="usageItem">
+                    <div class="text">
+                      <span>CPU</span>
+                      <span>{{comDockerUsage(item).cpu}} %</span>
+                    </div>
+                    <t-progress theme="line" :color="{ from: '#0052D9', to: '#00A870' }" :percentage="comDockerUsage(item).cpu" :status="'active'" :label="false"/>
+                  </div>
+                </div>
+              </div>
+
             </div>
 
           </div>
@@ -397,25 +433,44 @@ onBeforeUnmount(() => {
     }
 
     .systemctl {
-      .tableWarp {
+      .listWarp {
         width: 100%;
-        height: calc(180px - 2px);
+        height: 180px;
         border-radius: var(--td-radius-medium);
-        border: 1px solid var(--td-component-border);
-        :deep(.t-table) {
+
+        display: flex;
+        align-items: center;
+        gap: var(--td-size-6);
+        .item {
+          padding: var(--td-comp-paddingTB-m) var(--td-comp-paddingLR-m);
+          box-sizing: border-box;
+          background: var(--gradient-glass);
           border-radius: var(--td-radius-medium);
-          .t-table__content {
-            border-radius: var(--td-radius-medium);
+          border: 1px solid var(--gradient-border);
+          width: 120px;
+          height: 120px;
+
+          .title {
+            font-size: var(--td-font-size-body-large);
+            display: flex;
+            align-items: center;
+            gap: var(--td-size-4);
+            margin-bottom: var(--td-comp-margin-s);
+          }
+
+          .infoItem {
+            font-size: var(--td-font-size-body-small);
+            display: flex;
+            align-items: center;
+            gap: var(--td-size-3);
           }
         }
       }
     }
 
     .docker {
-      .tableWarp {
+      .listWarp {
         width: 100%;
-        //height: calc(100vh - $nav-height - var(--td-size-12)*2 - 2px - $title-height - var(--td-pop-padding-m)*2 - 30px - 180px - 8px - var(--td-pop-padding-m)*2 - 30px - 8px - 16px);
-
         @include respond-to('phone') {
           height: 300px;
         }
@@ -423,13 +478,99 @@ onBeforeUnmount(() => {
         @include respond-to('desktop') {
           height: calc(100vh - $nav-height - var(--td-size-12)*2 - 2px - $title-height - var(--td-pop-padding-m)*2 - 30px - 180px - 8px - var(--td-pop-padding-m)*2 - 30px - 2px - 16px - 4px);
         }
+        overflow-y: auto;
 
-        border-radius: var(--td-radius-medium);
-        border: 1px solid var(--td-component-border);
-        :deep(.t-table) {
+        .item {
           border-radius: var(--td-radius-medium);
-          .t-table__content {
-            border-radius: var(--td-radius-medium);
+          border: 1px solid var(--gradient-border);
+          padding: var(--td-comp-paddingTB-m) var(--td-comp-paddingLR-m);
+          box-sizing: border-box;
+          margin-bottom: var(--td-comp-margin-m);
+          background: var(--gradient-glass);
+          @include respond-to('phone') {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--td-size-6);
+          }
+
+          @include respond-to('desktop') {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          }
+
+          .baseInfo {
+
+            @include respond-to('phone') {
+              width: 100%;
+            }
+
+            @include respond-to('desktop') {
+              width: 360px;
+            }
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            .dockerIcon {
+              object-fit: cover;
+              @include respond-to('phone') {
+                width: 30px;
+                height: 30px;
+              }
+
+              @include respond-to('desktop') {
+                width: 40px;
+                height: 40px;
+              }
+            }
+
+            .right {
+              @include respond-to('phone') {
+                width: calc(100% - 25px - var(--td-comp-margin-l));
+              }
+
+              @include respond-to('desktop') {
+                width: calc(100% - 40px - var(--td-comp-margin-l));
+              }
+              .name {
+                font-size: var(--td-font-size-body-large);
+                margin-bottom: var(--td-comp-margin-m);
+                font-weight: bold;
+              }
+
+              .info {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                .infoItem {
+                  font-size: var(--td-font-size-body-small);
+                  display: flex;
+                  align-items: center;
+                  gap: var(--td-size-3);
+                }
+              }
+            }
+
+          }
+
+          .usage {
+            @include respond-to('phone') {
+              width: 100%;
+            }
+            @include respond-to('desktop') {
+              width: calc(100% - 360px - 20px - var(--td-comp-paddingLR-m));
+            }
+
+            .usageItem {
+              .text {
+                font-size: var(--td-font-size-body-small);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+              }
+            }
           }
         }
       }
